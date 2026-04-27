@@ -110,7 +110,7 @@ def display_rolling_window_performance():
 
     # Resample the data to quarterly frequency for fewer slider options
     # Ensure that the latest date (2024-10-31) is the last date in the slider
-    quarterly_data = portfolio_with_risk_free_df.resample("Q").last()
+    quarterly_data = portfolio_with_risk_free_df.resample("QE").last()
     latest_date = pd.Timestamp("2024-10-31")
     if latest_date not in quarterly_data.index:
         # Include the latest date manually if it's missing from the resampled data
