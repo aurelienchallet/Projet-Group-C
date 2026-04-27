@@ -106,6 +106,7 @@ def get_sp500_data(start, end):
         sp500_data = sp500_data.dropna(subset=["Return"])
         sp500_data["Cumulative_Return"] = (1 + sp500_data["Return"]).cumprod()
         sp500_data["Year"] = sp500_data.index.year
+        sp500_data = sp500_data[sp500_data.index <= pd.Timestamp(end_str)]
         return sp500_data
     except Exception as e:
         st.warning(f"Impossible de charger les données S&P 500 : {e}")
