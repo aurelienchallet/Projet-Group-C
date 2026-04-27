@@ -96,7 +96,7 @@ def display_black_litterman_performance():
     )
 
     # Resample the data to quarterly frequency for fewer slider options
-    quarterly_data = portfolio_with_risk_free_df_bl.resample("Q").last()
+    quarterly_data = portfolio_with_risk_free_df_bl.resample("QE").last()
 
     # Clean column names by removing "Price_" prefix
     quarterly_data.columns = [
