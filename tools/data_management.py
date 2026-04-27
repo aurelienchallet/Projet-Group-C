@@ -83,18 +83,19 @@ class CurrentResults:
         self.results.clear()
 
 
-@st.cache_data
 def get_sp500_data(start, end):
-    import yfinance as yf
+    sp500_data = yf.download(
+        "^GSPC",
+        start=start,
+        end=end,
+    )
 
-    sp500_data = yf.download("^GSPC", start=start, end=end, auto_adjust=True, progress=False)
-    sp500_data = sp500_data[["Close"]].copy()
-    sp500_data.columns = ["Close"]
-    sp500_data.index = pd.to_datetime(sp500_data.index).tz_localize(None)
-
-    sp500_data["Return"] = sp500_data["Close"].pct_change()
-    sp500_data = sp500_data.dropna(subset=["Return"])
+    # Calculate S&P 500 daily and cumulative returns
+    sp500_data["Return"] = sp500_data["Adj Close"].pct_change()
+    sp500_data.dropna(inplace=True)
     sp500_data["Cumulative_Return"] = (1 + sp500_data["Return"]).cumprod()
+
+    # Calculate S&P 500 annualized return per year
     sp500_data["Year"] = sp500_data.index.year
 
     return sp500_data
