@@ -83,22 +83,33 @@ class CurrentResults:
         self.results.clear()
 
 
+@st.cache_data
 def get_sp500_data(start, end):
-    sp500_data = yf.download(
-        "^GSPC",
-        start=start,
-        end=end,
-    )
+    start_str = pd.Timestamp(start).strftime("%Y-%m-%d")
+    end_str = pd.Timestamp(end).strftime("%Y-%m-%d")
 
-    # Calculate S&P 500 daily and cumulative returns
-    sp500_data["Return"] = sp500_data["Adj Close"].pct_change()
-    sp500_data.dropna(inplace=True)
-    sp500_data["Cumulative_Return"] = (1 + sp500_data["Return"]).cumprod()
-
-    # Calculate S&P 500 annualized return per year
-    sp500_data["Year"] = sp500_data.index.year
-
-    return sp500_data
+    try:
+        import requests
+        from io import StringIO
+        url = (
+            f"https://fred.stlouisfed.org/graph/fredgraph.csv"
+            f"?id=SP500&observation_start={start_str}&observation_end={end_str}"
+        )
+        resp = requests.get(url, timeout=10)
+        resp.raise_for_status()
+        sp500_data = pd.read_csv(StringIO(resp.text), parse_dates=["observation_date"])
+        sp500_data = sp500_data.rename(columns={"observation_date": "Date", "SP500": "Close"})
+        sp500_data = sp500_data[sp500_data["Close"] != "."].copy()
+        sp500_data["Close"] = sp500_data["Close"].astype(float)
+        sp500_data = sp500_data.set_index("Date")
+        sp500_data["Return"] = sp500_data["Close"].pct_change()
+        sp500_data = sp500_data.dropna(subset=["Return"])
+        sp500_data["Cumulative_Return"] = (1 + sp500_data["Return"]).cumprod()
+        sp500_data["Year"] = sp500_data.index.year
+        return sp500_data
+    except Exception as e:
+        st.warning(f"Impossible de charger les données S&P 500 : {e}")
+        return pd.DataFrame()
 
 
 def initialize_session_state():
