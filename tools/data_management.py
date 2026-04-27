@@ -85,12 +85,12 @@ class CurrentResults:
 
 @st.cache_data
 def get_sp500_data(start, end):
-    import pandas as pd
-    from pandas_datareader import data as pdr
+    import yfinance as yf
 
-    sp500_data = pdr.get_data_fred("SP500", start=start, end=end)
-
-    sp500_data = sp500_data.rename(columns={"SP500": "Close"})
+    sp500_data = yf.download("^GSPC", start=start, end=end, auto_adjust=True, progress=False)
+    sp500_data = sp500_data[["Close"]].copy()
+    sp500_data.columns = ["Close"]
+    sp500_data.index = pd.to_datetime(sp500_data.index).tz_localize(None)
 
     sp500_data["Return"] = sp500_data["Close"].pct_change()
     sp500_data = sp500_data.dropna(subset=["Return"])
